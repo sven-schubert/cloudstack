@@ -115,6 +115,8 @@ known_categories = {
     'logout': 'Authentication',
     'saml': 'Authentication',
     'getSPMetadata': 'Authentication',
+    'listIdps': 'Authentication',
+    'authorizeSamlSso': 'Authentication',
     'Capacity': 'System Capacity',
     'NetworkDevice': 'Network Device',
     'ExternalLoadBalancer': 'Ext Load Balancer',

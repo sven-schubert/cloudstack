@@ -51,28 +51,43 @@
                 <form>
                     <div class="logo"></div>
                     <div class="fields">
-                        <!-- User name -->
-                        <div class="field username">
-                            <label for="username"><fmt:message key="label.username"/></label>
-                            <input type="text" name="username" class="required" />
+                        <ul class="login-tabs">
+                            <li id="saml-login-option" data-tab="saml-login"><fmt:message key="label.saml.login"/></li>
+                            <li id="cloudstack-login-option" data-tab="cloudstack-login">CloudStack <fmt:message key="label.login"/></li>
+                        </ul>
+                        <div id="cloudstack-login" class="login-tab-content current">
+                            <!-- User name -->
+                            <div class="field username">
+                                <label for="username"><fmt:message key="label.username"/></label>
+                                <input type="text" name="username" class="required" />
+                            </div>
+                            <!-- Password -->
+                            <div class="field password">
+                                <label for="password"><fmt:message key="label.password"/></label>
+                                <input type="password" name="password" class="required" autocomplete="off" />
+                            </div>
+                            <!-- Domain -->
+                            <div class="field domain">
+                                <label for="domain"><fmt:message key="label.domain"/></label>
+                                <input type="text" name="domain" />
+                            </div>
+                            <!-- Submit (login) -->
+                            <input id="cloudstack-login-submit" type="submit" value="<fmt:message key="label.login"/>" />
                         </div>
-                        <!-- Password -->
-                        <div class="field password">
-                            <label for="password"><fmt:message key="label.password"/></label>
-                            <input type="password" name="password" class="required" autocomplete="off" />
+
+                        <div id="saml-login" class="login-tab-content">
+                            <select id="saml-idps" style="width: 260px"></select>
+                            <div class="field domain">
+                                <label for="saml-domain"><fmt:message key="label.domain"/></label>
+                                <input id="saml-domain" type="text" name="saml-domain" />
+                                <input id="saml-login-submit" type="submit" value="<fmt:message key="label.login"/>" />
+                            </div>
                         </div>
-                        <!-- Domain -->
-                        <div class="field domain">
-                            <label for="domain"><fmt:message key="label.domain"/></label>
-                            <input type="text" name="domain" />
-                        </div>
-                        <!-- Submit (login) -->
-                        <input type="submit" value="<fmt:message key="label.login"/>" />
-                        <div id="saml-login"><input type="samlsubmit" value="<fmt:message key="label.saml.login"/>"/></div>
+
                         <!-- Select language -->
                         <div class="select-language">
                             <select name="language">
-                                <option value=""></option> <!-- when this blank option is selected, browser's default language will be used -->
+                                <option value=""></option> <!-- when this blank option is selected, default language of the browser will be used -->
                                 <option value="en"><fmt:message key="label.lang.english"/></option>
                                 <option value="ja_JP"><fmt:message key="label.lang.japanese"/></option>
                                 <option value="zh_CN"><fmt:message key="label.lang.chinese"/></option>
