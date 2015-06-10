@@ -115,7 +115,7 @@
                             cookieValue = cookieValue.slice(1, cookieValue.length-1);
                             $.cookie(cookieName, cookieValue, { expires: 1 });
                         }
-                        return cookieValue;
+                        return decodeURIComponent(cookieValue);
                     };
                     unBoxCookieValue('sessionkey');
                     // if sessionkey cookie exists use this to set g_sessionKey
