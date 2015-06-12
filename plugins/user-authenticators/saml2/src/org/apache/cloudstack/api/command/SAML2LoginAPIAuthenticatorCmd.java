@@ -302,7 +302,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                             resp.addCookie(new Cookie("domainid", URLEncoder.encode(loginResponse.getDomainId(), HttpUtils.UTF_8)));
                             resp.addCookie(new Cookie("role", URLEncoder.encode(loginResponse.getType(), HttpUtils.UTF_8)));
                             resp.addCookie(new Cookie("username", URLEncoder.encode(loginResponse.getUsername(), HttpUtils.UTF_8)));
-                            resp.addCookie(new Cookie("sessionkey", URLEncoder.encode(loginResponse.getSessionKey(), HttpUtils.UTF_8)));
+                            resp.addCookie(new Cookie(ApiConstants.SESSIONKEY, URLEncoder.encode(loginResponse.getSessionKey(), HttpUtils.UTF_8)));
                             resp.addCookie(new Cookie("account", URLEncoder.encode(loginResponse.getAccount(), HttpUtils.UTF_8)));
                             String timezone = loginResponse.getTimeZone();
                             if (timezone != null) {
