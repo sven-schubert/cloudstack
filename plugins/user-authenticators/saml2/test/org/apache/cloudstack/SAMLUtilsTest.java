@@ -56,7 +56,6 @@ public class SAMLUtilsTest extends TestCase {
         LogoutRequest req = SAMLUtils.buildLogoutRequest(logoutUrl, spId);
         assertEquals(req.getDestination(), logoutUrl);
         assertEquals(req.getIssuer().getValue(), spId);
-        assertEquals(req.getSessionIndexes().get(0).getSessionIndex(), sessionIndex);
     }
 
     @Test

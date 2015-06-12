@@ -55,8 +55,8 @@ public interface SAML2AuthManager extends PluggableAPIAuthenticator, PluggableSe
     public static final ConfigKey<String> SAMLUserAttributeName = new ConfigKey<String>("Advanced", String.class, "saml2.user.attribute", "uid",
             "Attribute name to be looked for in SAML response that will contain the username", true);
 
-    public static final ConfigKey<String> SAMLDefaultDomain = new ConfigKey<String>("Advanced", String.class, "saml2.default.domainid", "1",
-            "The default domain UUID to use if domain information is not found while authenticating users", true);
+    public static final ConfigKey<String> SAMLDefaultDomainPath = new ConfigKey<String>("Advanced", String.class, "saml2.default.domainpath", "/",
+            "The default domain path to use if no domain information is provided on request", true);
 
     public static final ConfigKey<String> SAMLIdentityProviderMetadataURL = new ConfigKey<String>("Advanced", String.class, "saml2.idp.metadata.url", "https://openidp.feide.no/simplesaml/saml2/idp/metadata.php",
             "SAML2 Identity Provider Metadata XML Url", true);
@@ -67,8 +67,8 @@ public interface SAML2AuthManager extends PluggableAPIAuthenticator, PluggableSe
     public static final ConfigKey<String> SAMLSignatureAlgorithm = new ConfigKey<String>("Advanced", String.class, "saml2.sigalg", "SHA1",
             "The algorithm to use to when signing a SAML request. Default is SHA1, allowed algorithms: SHA1, SHA256, SHA384, SHA512", true);
 
-    public static final ConfigKey<Integer> SAMLTimeout = new ConfigKey<Integer>("Advanced", Integer.class, "saml2.timeout", "30000",
-            "SAML2 IDP Metadata Downloading and parsing etc. activity timeout in milliseconds", true);
+    public static final ConfigKey<Integer> SAMLTimeout = new ConfigKey<Integer>("Advanced", Integer.class, "saml2.timeout", "1800",
+            "SAML2 IDP Metadata refresh interval in seconds, minimum value is set to 300", true);
 
     public SAMLProviderMetadata getSPMetadata();
     public SAMLProviderMetadata getIdPMetadata(String entityId);

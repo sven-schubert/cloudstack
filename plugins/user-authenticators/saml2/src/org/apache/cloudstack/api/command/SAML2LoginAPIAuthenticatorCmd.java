@@ -18,7 +18,6 @@
 package org.apache.cloudstack.api.command;
 
 import com.cloud.api.response.ApiResponseSerializer;
-import com.cloud.domain.Domain;
 import com.cloud.exception.CloudAuthenticationException;
 import com.cloud.user.Account;
 import com.cloud.user.DomainManager;
@@ -153,6 +152,17 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                     domainPath = ((String[])params.get(ApiConstants.DOMAIN))[0];
                 }
 
+                if (domainPath != null && !domainPath.isEmpty()) {
+                    if (!domainPath.startsWith("/")) {
+                        domainPath = "/" + domainPath;
+                    }
+                    if (!domainPath.endsWith("/")) {
+                        domainPath = domainPath + "/";
+                    }
+                } else {
+                    domainPath = SAML2AuthManager.SAMLDefaultDomainPath.value();
+                }
+
                 SAMLProviderMetadata spMetadata = _samlAuthManager.getSPMetadata();
                 SAMLProviderMetadata idpMetadata = _samlAuthManager.getIdPMetadata(idpId);
                 if (idpMetadata == null) {
@@ -186,22 +196,8 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                             params, responseType));
                 }
 
-                String defaultDomainString = SAML2AuthManager.SAMLDefaultDomain.value();
                 String username = null;
                 Long domainId = null;
-                Domain domain = _domainMgr.getDomain(defaultDomainString);
-                if (domain != null) {
-                    domainId = domain.getId();
-                } else {
-                    try {
-                        domainId = Long.parseLong(defaultDomainString);
-                    } catch (NumberFormatException ignore) {
-                    }
-                }
-                if (domainId == null) {
-                    s_logger.error("The default domain ID for SAML users is not set correct, it should be a UUID. ROOT domain will be used.");
-                }
-
                 Issuer issuer = processedSAMLResponse.getIssuer();
                 SAMLProviderMetadata spMetadata = _samlAuthManager.getSPMetadata();
                 SAMLProviderMetadata idpMetadata = _samlAuthManager.getIdPMetadata(issuer.getValue());

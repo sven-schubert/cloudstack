@@ -33,6 +33,7 @@ import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.framework.security.keystore.KeystoreDao;
 import org.apache.cloudstack.framework.security.keystore.KeystoreVO;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.log4j.Logger;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
@@ -80,6 +81,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Component
 @Local(value = {SAML2AuthManager.class, PluggableAPIAuthenticator.class})
@@ -92,7 +95,9 @@ public class SAML2AuthManagerImpl extends AdapterBase implements SAML2AuthManage
     private String idpSingleSignOnUrl;
     private String idpSingleLogOutUrl;
 
-    private HTTPMetadataProvider idpMetaDataProvider;
+    private Timer _timer;
+    private int _refreshInterval = SAMLPluginConstants.SAML_REFRESH_INTERVAL;
+    private HTTPMetadataProvider _idpMetaDataProvider;
 
     @Inject
     private KeystoreDao _ksDao;
@@ -115,6 +120,14 @@ public class SAML2AuthManagerImpl extends AdapterBase implements SAML2AuthManage
             s_logger.info("SAML auth plugin not enabled so not loading");
         }
         return super.start();
+    }
+
+    @Override
+    public boolean stop() {
+        if (_timer != null) {
+            _timer.cancel();
+        }
+        return super.stop();
     }
 
     private boolean initSP() {
@@ -313,22 +326,44 @@ public class SAML2AuthManagerImpl extends AdapterBase implements SAML2AuthManage
         }
     }
 
+    class MetadataRefreshTask extends TimerTask {
+        @Override
+        public void run() {
+            if (_idpMetaDataProvider == null) {
+                return;
+            }
+            s_logger.debug("Starting SAML IDP Metadata Refresh Task");
+            Map <String, SAMLProviderMetadata> metadataMap = new HashMap<String, SAMLProviderMetadata>();
+            try {
+                discoverAndAddIdp(_idpMetaDataProvider.getMetadata(), metadataMap);
+                _idpMetadataMap = metadataMap;
+                expireTokens();
+                s_logger.debug("Finished refreshing SAML Metadata and expiring old auth tokens");
+            } catch (MetadataProviderException e) {
+                s_logger.warn("SAML Metadata Refresh task failed with exception: " + e.getMessage());
+            }
+
+        }
+    }
+
     private boolean setup() {
         if (!initSP()) {
             s_logger.error("SAML Plugin failed to initialize, please fix the configuration and restart management server");
             return false;
         }
-        String idpMetaDataUrl = SAMLIdentityProviderMetadataURL.value();
-        int tolerance = 30000;
-        tolerance = SAMLTimeout.value();
+        _timer = new Timer();
+        final HttpClient client = new HttpClient();
+        final String idpMetaDataUrl = SAMLIdentityProviderMetadataURL.value();
+        if (SAMLTimeout.value() != null && SAMLTimeout.value() > SAMLPluginConstants.SAML_REFRESH_INTERVAL) {
+            _refreshInterval = SAMLTimeout.value();
+        }
         try {
             DefaultBootstrap.bootstrap();
-            idpMetaDataProvider = new HTTPMetadataProvider(idpMetaDataUrl, tolerance);
-            idpMetaDataProvider.setRequireValidMetadata(true);
-            idpMetaDataProvider.setParserPool(new BasicParserPool());
-            idpMetaDataProvider.initialize();
-            _idpMetadataMap.clear();
-            discoverAndAddIdp(idpMetaDataProvider.getMetadata(), _idpMetadataMap);
+            _idpMetaDataProvider = new HTTPMetadataProvider(_timer, client, idpMetaDataUrl);
+            _idpMetaDataProvider.setRequireValidMetadata(true);
+            _idpMetaDataProvider.setParserPool(new BasicParserPool());
+            _idpMetaDataProvider.initialize();
+            _timer.scheduleAtFixedRate(new MetadataRefreshTask(), 0, _refreshInterval * 1000);
         } catch (MetadataProviderException e) {
             s_logger.error("Unable to read SAML2 IDP MetaData URL, error:" + e.getMessage());
             s_logger.error("SAML2 Authentication may be unavailable");
@@ -464,7 +499,7 @@ public class SAML2AuthManagerImpl extends AdapterBase implements SAML2AuthManage
                 SAMLServiceProviderOrgName, SAMLServiceProviderOrgUrl,
                 SAMLServiceProviderSingleSignOnURL, SAMLServiceProviderSingleLogOutURL,
                 SAMLCloudStackRedirectionUrl, SAMLUserAttributeName,
-                SAMLDefaultDomain,
+                SAMLDefaultDomainPath,
                 SAMLIdentityProviderMetadataURL, SAMLDefaultIdentityProviderId,
                 SAMLSignatureAlgorithm, SAMLTimeout};
     }

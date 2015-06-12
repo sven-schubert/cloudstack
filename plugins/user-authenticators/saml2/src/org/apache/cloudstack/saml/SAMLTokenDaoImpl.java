@@ -18,10 +18,12 @@ package org.apache.cloudstack.saml;
 
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
+import com.cloud.utils.db.TransactionLegacy;
+import com.cloud.utils.exception.CloudRuntimeException;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.Local;
+import java.sql.PreparedStatement;
 
 @DB
 @Component
@@ -32,12 +34,18 @@ public class SAMLTokenDaoImpl extends GenericDaoBase<SAMLTokenVO, Long> implemen
         super();
     }
 
-    @PostConstruct
-    protected void init() {
-    }
-
     @Override
     public void expireTokens() {
-        // TODO: implement delete all from token where timestamp is older than certain thresholds
+        TransactionLegacy txn = TransactionLegacy.currentTxn();
+        try {
+            txn.start();
+            String sql = "DELETE FROM `saml_token` WHERE `created` < (NOW() - INTERVAL 1 HOUR)";
+            PreparedStatement pstmt = txn.prepareAutoCloseStatement(sql);
+            pstmt.executeUpdate();
+            txn.commit();
+        } catch (Exception e) {
+            txn.rollback();
+            throw new CloudRuntimeException("Unable to flush old SAML tokens due to exception", e);
+        }
     }
 }
